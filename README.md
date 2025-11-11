@@ -28,20 +28,6 @@ Observe → Analyze → Reason → Record → Learn
 | **Storage Layer** | Persists structured data in PostgreSQL |
 | **Coordinator** | Schedules, monitors, and recovers processes |
 
----
-
-## 🧱 Project Structure
-
-market_agent/  
-├── config/           # Settings, logging, prompt templates  
-├── data/             # Fixtures, migrations, schemas  
-├── market_agent/     # Core source code (ingest, analytics, reasoner)  
-├── scripts/          # Utility and maintenance scripts  
-├── tests/            # Pytest-based tests  
-└── docs/             # Architecture and operations documentation  
-
----
-
 ## ⚙️ Getting Started
 
 ### Prerequisites
