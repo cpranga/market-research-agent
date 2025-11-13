@@ -1,0 +1,73 @@
+diff --git a/.env.example b/.env.example
+index e69de29..80bdb6d 100644
+--- a/.env.example
++++ b/.env.example
+@@ -0,0 +1,5 @@
++DATABASE_URL=""
++LOG_LEVEL=""
++FETCH_INTERVAL=""
++SYMBOLS=""
++API_PROVIDER=""
+\ No newline at end of file
+diff --git a/requirements.txt b/requirements.txt
+index e69de29..22bd076 100644
+--- a/requirements.txt
++++ b/requirements.txt
+@@ -0,0 +1,4 @@
++requests
++psycopg2-binary
++python-dotenv
++pytest
+diff --git a/scripts/run_ingest.py b/scripts/run_ingest.py
+index e69de29..606246c 100644
+--- a/scripts/run_ingest.py
++++ b/scripts/run_ingest.py
+@@ -0,0 +1 @@
++from core.config import Config
+\ No newline at end of file
+diff --git a/src/core/config.py b/src/core/config.py
+index c874124..8dca4bf 100644
+--- a/src/core/config.py
++++ b/src/core/config.py
+@@ -1 +1,13 @@
+-from dotenv import load_dotenv
+\ No newline at end of file
++from dotenv import load_dotenv
++import os
++
++load_dotenv()
++
++class Config:
++    DB_URL = os.getenv("DATABASE_URL")
++    FETCH_INTERVAL = int(os.getenv("FETCH_INTERVAL", "60"))
++    SYMBOLS = [s.strip() for s in os.getenv("SYMBOLS", "AAPL").split(",")]
++    API_PROVIDER = os.getenv("API_PROVIDER", "yfinance")
++    LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
++    FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY")
++    REQUEST_DELAY = float(os.getenv("REQUEST_DELAY", "0.2"))
+\ No newline at end of file
+diff --git a/src/ingest/fetcher.py b/src/ingest/fetcher.py
+index e69de29..07bb2a4 100644
+--- a/src/ingest/fetcher.py
++++ b/src/ingest/fetcher.py
+@@ -0,0 +1,19 @@
++from typing import List
++import time
++
++from core.config import Config
++from ingest.providers import get_provider
++from ingest.providers.base import TradeRecord
++from ingest.providers.errors import ProviderError
++
++
++def fetch_all() -> List[TradeRecord]:
++    provider = get_provider()
++    trade_records: List[TradeRecord] = []
++    for i, symbol in enumerate(Config.SYMBOLS):
++        # Implicitly re-raises any thrown errors
++        record: TradeRecord = provider.fetch(symbol)
++        trade_records.append(record)
++        if i < len(Config.SYMBOLS) - 1:
++            time.sleep(Config.REQUEST_DELAY)
++    return trade_records
+\ No newline at end of file
