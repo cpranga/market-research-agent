@@ -7,7 +7,7 @@ from ingest.providers.base import TradeRecord
 def validate(records: List[TradeRecord]) -> List[TradeRecord]:
     val_records: List[TradeRecord] = []
     seen_records: Set[Tuple[str, datetime]] = set()
-    tolerance = timedelta(seconds=5)
+    tolerance = timedelta(seconds=10)
 
     if not records:
         return []
@@ -26,8 +26,6 @@ def validate(records: List[TradeRecord]) -> List[TradeRecord]:
             raise ValueError("Source is empty: {}".format(record))
         record.source = record.source.lower()
 
-        now = datetime.now(timezone.utc)  # TODO: handle fetching taking a long time
-        to_add: Tuple[str, datetime] = (record.symbol, record.ts)
 
         # Symbol checks
         if not record.symbol:
@@ -42,7 +40,7 @@ def validate(records: List[TradeRecord]) -> List[TradeRecord]:
             raise ValueError("Timestamp is not a datetime: {}".format(record.ts))
         if record.ts.tzinfo is None or record.ts.tzinfo.utcoffset(record.ts) is None:
             raise ValueError("Timestamp is not timezone-aware: {}".format(record.ts))
-        if record.ts - now > tolerance:
+        if record.ts - datetime.now(timezone.utc) > tolerance:
             raise ValueError("Timestamp is too far in the future: {}".format(record.ts))
 
         # Price checks
@@ -66,6 +64,7 @@ def validate(records: List[TradeRecord]) -> List[TradeRecord]:
             raise ValueError("Source is empty: {}".format(record))
 
         # Deduplicate: keep first occurrence only
+        to_add: Tuple[str, datetime] = (record.symbol, record.ts)
         if to_add in seen_records:
             continue
         seen_records.add(to_add)
