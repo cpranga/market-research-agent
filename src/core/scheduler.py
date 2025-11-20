@@ -57,3 +57,6 @@ def run_scheduler():
         info("Scheduler stopped manually.")
     except SystemExit:
         info("Scheduler shutting down.")
+
+if __name__ == "__main__":
+    run_scheduler()

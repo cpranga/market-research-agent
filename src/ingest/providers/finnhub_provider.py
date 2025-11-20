@@ -13,11 +13,11 @@ class FinnhubError(ProviderError):
     pass
 
 class FinnhubProvider(BaseProvider):
-    QUOTE_URL = "https://finnhub.io/api/v1"
+    QUOTE_URL = "https://finnhub.io/api/v1/quote"
 
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or Config.FINNHUB_API_KEY
-        if not self.api_key:
+        if not self.api_key or self.api_key is None:
             raise FinnhubError("Finnhub API Key is missing.")
         
     def fetch(self, symbol: str) -> TradeRecord:

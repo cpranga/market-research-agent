@@ -19,42 +19,8 @@ def write(records: List[TradeRecord]) -> int:
             cur = conn.cursor()
 
             for record in records:
-                symbol = record.symbol
-
-                # Check cache first
-                if symbol in symbol_cache:
-                    symbol_id = symbol_cache[symbol]
-
-                else:
-                    # Look up symbol id
-                    cur.execute(
-                        "SELECT id FROM symbols WHERE symbol = %s;",
-                        (symbol,)
-                    )
-                    row = cur.fetchone()
-
-                    if row is not None:
-                        symbol_id = row[0]
-                    else:
-                        # Insert symbol + return id
-                        cur.execute(
-                            "INSERT INTO symbols (symbol) VALUES (%s) RETURNING id;",
-                            (symbol,)
-                        )
-                        symbol_id = cur.fetchone()[0]
-
-                    # Cache for future rows in same batch
-                    symbol_cache[symbol] = symbol_id
-
-                # Insert ingested record
-                cur.execute(
-                    """
-                    INSERT INTO ingested_data (symbol_id, ts, price, size, source)
-                    VALUES (%s, %s, %s, %s, %s);
-                    """,
-                    (symbol_id, record.ts, record.price, record.size, record.source)
-                )
-
+                cur.execute("INSERT INTO raw_trades (symbol, ts, price, size, source) VALUES (%s, %s, %s, %s, %s)",
+                            (record.symbol, record.ts, record.price, record.size, record.source))
                 cnt_written += 1
 
             # Leaving the with-block commits the transaction automatically
