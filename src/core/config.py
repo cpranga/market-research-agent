@@ -11,3 +11,6 @@ class Config:
     LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")
     FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY")
     REQUEST_DELAY = float(os.getenv("REQUEST_DELAY", "0.2"))
+    SCHEDULER_INTERVAL_SEC = int(os.getenv("SCHEDULER_INTERVAL_SEC", 2))
+    ENABLE_LOG_COLORS = bool(os.getenv("ENABLE_LOG_COLORS", "False"))
+    DEBUG = bool(os.getenv("DEBUG", "False"))
