@@ -6,7 +6,10 @@ from core.logging import info, error, debug
 from datetime import datetime, timezone
 import time
 
-def run_once():
+
+import asyncio
+
+async def run_once():
     debug("Starting single ingest cycle.")
 
     records = fetch_all()
@@ -15,12 +18,13 @@ def run_once():
     validated = validate(records)
     debug("Validated {} records.".format(len(validated)))
 
-    written = write(validated)
+    written = await write(validated)
     info("Single ingestion cycle complete: {} records written".format(written))
 
     return written
 
-def run_scheduler():
+
+async def run_scheduler():
     info("Schedule started with interval {} seconds.".format(
         Config.SCHEDULER_INTERVAL_SEC
     ))
@@ -38,7 +42,7 @@ def run_scheduler():
                 validated = validate(records)
                 debug("Validated {} records.".format(len(validated)))
 
-                written = write(validated)
+                written = await write(validated)
                 info("Ingest cycle completed: {} records written.".format(written))
             
             except Exception as e:
@@ -59,4 +63,4 @@ def run_scheduler():
         info("Scheduler shutting down.")
 
 if __name__ == "__main__":
-    run_scheduler()
+    asyncio.run(run_scheduler())

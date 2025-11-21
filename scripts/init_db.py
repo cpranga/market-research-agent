@@ -12,11 +12,15 @@ from pathlib import Path
 # ---------------------------------------------------------------------
 # Load configuration
 # ---------------------------------------------------------------------
+
 load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
+TEST_DATABASE_URL = os.getenv("TEST_DATABASE_URL")
 
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL not set in environment or .env file")
+if not TEST_DATABASE_URL:
+    print("⚠️  TEST_DATABASE_URL not set. Only main database will be initialized.")
 
 ROOT = Path(__file__).resolve().parent.parent
 SQL_DIR = ROOT / "sql"
@@ -32,11 +36,11 @@ def run_sql_file(conn, file_path):
         cur.execute(sql.SQL(sql_text))
     print(f"✅ Applied: {file_path.name}")
 
-def main():
-    print("Connecting to database...")
-    with psycopg2.connect(DATABASE_URL) as conn:
-        conn.autocommit = False
 
+def init_database(db_url, label):
+    print("Connecting to {} database...".format(label))
+    with psycopg2.connect(db_url) as conn:
+        conn.autocommit = False
         try:
             # 1. Base schema
             schema_file = SQL_DIR / "schema.sql"
@@ -54,11 +58,18 @@ def main():
                 run_sql_file(conn, seeds)
 
             conn.commit()
-            print("🎉 Database initialized successfully.")
+            print("🎉 {} database initialized successfully.".format(label))
         except Exception as e:
             conn.rollback()
-            print("❌ Error during initialization:", e)
+            print("❌ Error during {} initialization: {}".format(label, e))
             raise
+
+def main():
+    # Always initialize main database
+    init_database(DATABASE_URL, "main")
+    # Optionally initialize test database
+    if TEST_DATABASE_URL:
+        init_database(TEST_DATABASE_URL, "test")
 
 if __name__ == "__main__":
     main()
