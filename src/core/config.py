@@ -14,3 +14,5 @@ class Config:
     SCHEDULER_INTERVAL_SEC = int(os.getenv("SCHEDULER_INTERVAL_SEC", "20"))
     ENABLE_LOG_COLORS = bool(os.getenv("ENABLE_LOG_COLORS", "False"))
     DEBUG = bool(os.getenv("DEBUG", "False"))
+    VOLATILITY_SPIKE_THRESHOLD = float(os.getenv("VOLATILITY_SPIKE_THRESHOLD", "0.1"))
+    ABNORMAL_PRICE_CHANGE_THRESHOLD = float(os.getenv("ABNORMAL_PRICE_CHANGE_THRESHOLD", "2.0"))
