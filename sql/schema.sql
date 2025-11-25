@@ -104,7 +104,8 @@ CREATE TABLE IF NOT EXISTS summaries (
     text             TEXT,
     tokens_used      INTEGER,
     latency_ms       INTEGER,
-    created_at       TIMESTAMPTZ DEFAULT NOW()
+    created_at       TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (symbol, window_start, window_end)
 );
 
 CREATE INDEX IF NOT EXISTS idx_summaries_symbol_window

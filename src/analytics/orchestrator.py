@@ -11,15 +11,33 @@ from analytics.aggregator import load_trades, build_windows
 from analytics.metrics import compute_metrics
 from analytics.detector import detect_events
 from analytics.writer import write_metrics, write_events
+from core.db import fetch_one
 
-async def run_pipeline(symbols: List[str], start: datetime, end: datetime, window_size: timedelta):
+async def run_pipeline(symbols: List[str], window_size: timedelta):
 	"""
-	Run the analytics pipeline for each symbol and time range.
+	Run the analytics pipeline for each symbol and all unprocessed time windows.
 	Loads trades, builds windows, computes metrics, detects events, and writes results to the database.
+	Continues processing new windows as they arrive.
 	"""
 	await init_pool()
 	try:
 		for symbol in symbols:
+			# Auto-detect latest processed window
+			latest = await fetch_one(
+				"SELECT MAX(window_end) as last_end FROM derived_metrics WHERE symbol = $1", (symbol,)
+			)
+			if latest and latest.get("last_end"):
+				start = latest["last_end"]
+			else:
+				# If no metrics exist, start from earliest trade
+				first_trade = await fetch_one(
+					"SELECT MIN(ts) as first_ts FROM raw_trades WHERE symbol = $1", (symbol,)
+				)
+				start = first_trade["first_ts"] if first_trade and first_trade.get("first_ts") else None
+			if not start:
+				continue
+			from datetime import datetime, timedelta
+			end = datetime.utcnow()
 			trades = await load_trades(symbol, start, end)
 			windows = build_windows(trades, start, end, window_size)
 			prev_window, prev_metrics = None, None
