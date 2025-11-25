@@ -32,7 +32,8 @@ CREATE TABLE IF NOT EXISTS derived_metrics (
     volatility      NUMERIC(18,6),
     momentum        NUMERIC(18,6),
     liquidity_ratio NUMERIC(18,6),
-    computed_at     TIMESTAMPTZ DEFAULT NOW()
+    computed_at     TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (symbol, window_start, window_end)
 );
 
 CREATE INDEX IF NOT EXISTS idx_metrics_symbol_window
@@ -46,7 +47,8 @@ CREATE TABLE IF NOT EXISTS events (
     type            TEXT NOT NULL,
     severity        TEXT,
     details         JSONB,
-    created_at      TIMESTAMPTZ DEFAULT NOW()
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (symbol, window_start, window_end, type)
 );
 
 CREATE INDEX IF NOT EXISTS idx_events_symbol_window

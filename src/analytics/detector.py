@@ -47,7 +47,8 @@ def detect_events(
     """
     raised_events: List[Event] = []
     # Check for a Volatility Spike
-    if metrics.get("volatility", 0.0) > Config.VOLATILITY_SPIKE_THRESHOLD:
+    vol = metrics.get("volatility")
+    if vol is not None and vol > Config.VOLATILITY_SPIKE_THRESHOLD:
         raised_events.append(Event(
             type="volatility_spike",
             severity="warning",
@@ -58,15 +59,19 @@ def detect_events(
         ))
     
     # Check for a momentum reversal
-    if prev_metrics and (metrics.get("momentum", 0.0) < 0.0) != (prev_metrics.get("momentum", 0.0) < 0.0):
-        raised_events.append(Event(
-            type="momentum_reversal",
-            severity="info",
-            symbol=window.symbol,
-            window_start=window.window_start,
-            window_end=window.window_end,
-            details={"current": metrics.get("momentum", 0.0), "previous": prev_metrics.get("momentum", 0.0)}
-        ))
+    cur_momentum = metrics.get("momentum")
+    if prev_metrics is not None and cur_momentum is not None:
+        prev_momentum = prev_metrics.get("momentum")
+        # Detect sign change (from positive to negative or vice versa)
+        if prev_momentum is not None and cur_momentum * prev_momentum < 0:
+            raised_events.append(Event(
+                type="momentum_reversal",
+                severity="info",
+                symbol=window.symbol,
+                window_start=window.window_start,
+                window_end=window.window_end,
+                details={"current": cur_momentum, "previous": prev_momentum}
+            ))
     
     # Check for an abnormal price change
     if window.open_price is not None and window.close_price is not None and abs(window.close_price - window.open_price) > Config.ABNORMAL_PRICE_CHANGE_THRESHOLD:
