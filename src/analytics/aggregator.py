@@ -1,11 +1,10 @@
 """
 This module loads raw data from Postgres, and groups it into analytical windows,
 creating structured data ready for analysis. It does not analyze the data itself;
- it prepare and shapes data to later be analyzed.
+it prepares and shapes data to later be analyzed.
 """
-import pandas as pd
 from datetime import datetime, timedelta
-from typing import List, Union, Dict, Optional
+from typing import List, Optional
 from ingest.providers.base import TradeRecord
 from math import ceil
 from core.db import fetch
@@ -73,10 +72,19 @@ async def load_trades(
         end: datetime
 ) -> List[TradeRecord]:
     res = await fetch(
-        "SELECT * from raw_trades where symbol = $1 and ts >= $2 and ts < $3",
+        "SELECT symbol, ts, price, size, source FROM raw_trades WHERE symbol = $1 AND ts >= $2 AND ts < $3",
         (symbol, start, end))
-    records: List[TradeRecord] = [TradeRecord(**raw_trade) for raw_trade in res]
-    records.sort(key=lambda r:r.ts)
+    records: List[TradeRecord] = [
+        TradeRecord(
+            symbol=raw_trade["symbol"],
+            ts=raw_trade["ts"],
+            price=float(raw_trade["price"]),
+            size=float(raw_trade["size"] or 0),
+            source=raw_trade["source"],
+        )
+        for raw_trade in res
+    ]
+    records.sort(key=lambda r: r.ts)
     return records
 
 async def aggregate (

@@ -8,6 +8,8 @@ try:
 except ImportError:
     COLORLOG_AVAILABLE = False
 
+from logging.handlers import MemoryHandler
+
 
 def get_logger():
     """Return a configured logger for the market agent."""
@@ -44,6 +46,12 @@ def get_logger():
     console.setLevel(logging.INFO if not Config.DEBUG else logging.DEBUG)
     console.setFormatter(formatter)
     logger.addHandler(console)
+
+    # ---- Ring buffer for debug context, flushed on warnings/errors ----
+    memory = MemoryHandler(capacity=200, flushLevel=logging.WARNING, target=console)
+    memory.setLevel(logging.DEBUG)
+    memory.setFormatter(formatter)
+    logger.addHandler(memory)
 
     # ---- Optional file handler ----
     if getattr(Config, "LOG_FILE", None):

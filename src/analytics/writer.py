@@ -27,9 +27,9 @@ async def write_metrics(
                 (symbol, window_start, window_end, metrics["vwap"], metrics["volatility"], metrics["momentum"], metrics["liquidity_ratio"])
             )
         except Exception as e:
-            raise WriterError(f"Database error during write: {e}") from e
+            raise WriterError("Database error during write: {}".format(e))
     except Exception as e:
-        raise WriterError(f"Unexpected error during write: {e}") from e
+        raise WriterError("Unexpected error during write: {}".format(e))
 
 async def write_events(
         events: List[Event]
@@ -50,11 +50,18 @@ async def write_events(
                     ON CONFLICT (symbol, window_start, window_end, type)
                     DO UPDATE SET severity = EXCLUDED.severity, details = EXCLUDED.details
                     """,
-                    (event.symbol, event.window_start, event.window_end, event.type, event.severity, json.dumps(event.details))
+                    (
+                        event.symbol,
+                        event.window_start,
+                        event.window_end,
+                        event.type,
+                        event.severity,
+                        json.dumps(event.details, default=float),
+                    )
                 )
                 cnt_written += 1
             except Exception as e:
-                raise WriterError(f"Database error during write: {e}") from e
+                raise WriterError("Database error during write: {}".format(e))
     except Exception as e:
-        raise WriterError(f"Unexpected error during write: {e}") from e
+        raise WriterError("Unexpected error during write: {}".format(e))
     return cnt_written

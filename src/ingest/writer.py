@@ -26,7 +26,7 @@ async def write(records: List[TradeRecord]) -> int:
                 )
                 cnt_written += 1
             except Exception as e:
-                raise WriterError(f"Database error during write: {e}") from e
+                raise WriterError("Database error during write: {}".format(e))
         return cnt_written
     except Exception as e:
-        raise WriterError(f"Unexpected error during write: {e}") from e
+        raise WriterError("Unexpected error during write: {}".format(e))

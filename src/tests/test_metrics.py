@@ -90,6 +90,6 @@ async def test_compute_metrics_bundle():
     trades2 = [make_trade(symbol, start + timedelta(minutes=1), 105.0, 5.0)]
     win1 = make_window(trades1, start, timedelta(minutes=1))
     win2 = make_window(trades2, start + timedelta(minutes=1), timedelta(minutes=1))
-    metrics = await compute_metrics(win2, win1)
+    metrics = compute_metrics(win2, win1)
     assert set(metrics.keys()) == {"vwap", "volatility", "momentum", "liquidity_ratio"}, "Should compute all metrics"
     assert metrics["momentum"] == 105.0 - 100.0, "Momentum should match expected value"

@@ -30,7 +30,7 @@ def liquidity_ratio(window: TradeWindow) -> Optional[float]:
 		return None
 	return window.total_volume / window.num_trades
 
-async def compute_metrics(window: TradeWindow, prev_window: Optional[TradeWindow] = None) -> Dict[str, Optional[float]]:
+def compute_metrics(window: TradeWindow, prev_window: Optional[TradeWindow] = None) -> Dict[str, Optional[float]]:
 	"""
 	Compute all metrics for a given window.
 	Returns a dict of metric_name: value.

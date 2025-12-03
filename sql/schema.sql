@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS raw_trades (
     inserted_at     TIMESTAMPTZ DEFAULT NOW()
 );
 
-CREATE INDEX IF NOT EXISTS idx_raw_trades_symbol_ts
+-- Single index to enforce idempotency on symbol + ts
+CREATE UNIQUE INDEX IF NOT EXISTS raw_trades_symbol_ts_key
     ON raw_trades(symbol, ts);
 
 -- ==========================================================
@@ -70,6 +71,54 @@ CREATE TABLE IF NOT EXISTS context_news (
 
 CREATE INDEX IF NOT EXISTS idx_news_symbol_ts
     ON context_news(symbol, published_at DESC);
+
+CREATE TABLE IF NOT EXISTS context_company (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    symbol          TEXT UNIQUE NOT NULL,
+    name            TEXT,
+    industry        TEXT,
+    exchange        TEXT,
+    market_cap      NUMERIC(18,2),
+    ipo_date        DATE,
+    currency        TEXT,
+    updated_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS context_financials (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    symbol          TEXT NOT NULL,
+    as_of           TIMESTAMPTZ NOT NULL,
+    beta            NUMERIC(18,6),
+    high_52w        NUMERIC(18,6),
+    low_52w         NUMERIC(18,6),
+    avg_vol_10d     NUMERIC(18,6),
+    sales_per_share NUMERIC(18,6),
+    net_margin      NUMERIC(18,6),
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (symbol, as_of)
+);
+
+CREATE TABLE IF NOT EXISTS strategies (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name            TEXT NOT NULL,
+    description     TEXT,
+    rules           TEXT,
+    symbols         TEXT[], -- null or empty means applies to all
+    active          BOOLEAN DEFAULT TRUE,
+    created_at      TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS actions (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    symbol          TEXT NOT NULL,
+    window_start    TIMESTAMPTZ NOT NULL,
+    window_end      TIMESTAMPTZ NOT NULL,
+    action          TEXT NOT NULL,
+    justification   TEXT,
+    source          TEXT,
+    created_at      TIMESTAMPTZ DEFAULT NOW(),
+    UNIQUE (symbol, window_start, window_end, action)
+);
 
 CREATE TABLE IF NOT EXISTS context_sector (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),

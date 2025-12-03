@@ -24,10 +24,12 @@ import asyncio
 from unittest.mock import AsyncMock
 
 @pytest.mark.asyncio
+@patch("core.scheduler.close_pool", new_callable=AsyncMock)
+@patch("core.scheduler.init_pool", new_callable=AsyncMock)
 @patch("core.scheduler.write", new_callable=AsyncMock)
 @patch("core.scheduler.validate")
 @patch("core.scheduler.fetch_all")
-async def test_run_once_happy_path(mock_fetch, mock_validate, mock_write):
+async def test_run_once_happy_path(mock_fetch, mock_validate, mock_write, mock_init, mock_close):
     mock_fetch.return_value = [make_rec()]
     mock_validate.return_value = [make_rec()]
     mock_write.return_value = 1
@@ -44,8 +46,10 @@ async def test_run_once_happy_path(mock_fetch, mock_validate, mock_write):
 # TEST 2 — run_once handles fetch errors
 # ---------------------------------------------------------
 @pytest.mark.asyncio
+@patch("core.scheduler.close_pool", new_callable=AsyncMock)
+@patch("core.scheduler.init_pool", new_callable=AsyncMock)
 @patch("core.scheduler.fetch_all")
-async def test_run_once_fetch_error(mock_fetch):
+async def test_run_once_fetch_error(mock_fetch, mock_init, mock_close):
     mock_fetch.side_effect = Exception("fetch failed")
 
     with pytest.raises(Exception):
@@ -56,9 +60,11 @@ async def test_run_once_fetch_error(mock_fetch):
 # TEST 3 — run_once handles validation errors
 # ---------------------------------------------------------
 @pytest.mark.asyncio
+@patch("core.scheduler.close_pool", new_callable=AsyncMock)
+@patch("core.scheduler.init_pool", new_callable=AsyncMock)
 @patch("core.scheduler.fetch_all")
 @patch("core.scheduler.validate")
-async def test_run_once_validation_error(mock_validate, mock_fetch):
+async def test_run_once_validation_error(mock_validate, mock_fetch, mock_init, mock_close):
     mock_fetch.return_value = [make_rec()]
     mock_validate.side_effect = Exception("validation error")
 
@@ -70,10 +76,12 @@ async def test_run_once_validation_error(mock_validate, mock_fetch):
 # TEST 4 — run_once handles writer errors
 # ---------------------------------------------------------
 @pytest.mark.asyncio
+@patch("core.scheduler.close_pool", new_callable=AsyncMock)
+@patch("core.scheduler.init_pool", new_callable=AsyncMock)
 @patch("core.scheduler.fetch_all")
 @patch("core.scheduler.validate")
 @patch("core.scheduler.write", new_callable=AsyncMock)
-async def test_run_once_writer_error(mock_write, mock_validate, mock_fetch):
+async def test_run_once_writer_error(mock_write, mock_validate, mock_fetch, mock_init, mock_close):
     mock_fetch.return_value = [make_rec()]
     mock_validate.return_value = [make_rec()]
     mock_write.side_effect = Exception("writer error")
@@ -87,12 +95,14 @@ async def test_run_once_writer_error(mock_write, mock_validate, mock_fetch):
 # ---------------------------------------------------------
 @pytest.mark.asyncio
 @patch("core.scheduler.Config")
-@patch("core.scheduler.time.sleep")
+@patch("core.scheduler.asyncio.sleep")
 @patch("core.scheduler.write", new_callable=AsyncMock)
 @patch("core.scheduler.validate")
 @patch("core.scheduler.fetch_all")
+@patch("core.scheduler.close_pool", new_callable=AsyncMock)
+@patch("core.scheduler.init_pool", new_callable=AsyncMock)
 async def test_run_scheduler_two_cycles(
-    mock_fetch, mock_validate, mock_write, mock_sleep, mock_config
+    mock_init, mock_close, mock_fetch, mock_validate, mock_write, mock_sleep, mock_config
 ):
     mock_fetch.side_effect = [[make_rec()], [make_rec()], KeyboardInterrupt()]
     mock_validate.return_value = [make_rec()]
@@ -116,10 +126,12 @@ async def test_run_scheduler_two_cycles(
 # ---------------------------------------------------------
 @pytest.mark.asyncio
 @patch("core.scheduler.error")
-@patch("core.scheduler.time.sleep")
+@patch("core.scheduler.asyncio.sleep")
 @patch("core.scheduler.Config")
 @patch("core.scheduler.fetch_all")
-async def test_scheduler_continues_after_error(mock_fetch, mock_config, mock_sleep, mock_error):
+@patch("core.scheduler.close_pool", new_callable=AsyncMock)
+@patch("core.scheduler.init_pool", new_callable=AsyncMock)
+async def test_scheduler_continues_after_error(mock_init, mock_close, mock_fetch, mock_config, mock_sleep, mock_error):
     mock_fetch.side_effect = [
         Exception("fetch failed"),   # first cycle
         KeyboardInterrupt()          # second cycle stops loop
@@ -139,13 +151,15 @@ async def test_scheduler_continues_after_error(mock_fetch, mock_config, mock_sle
 # TEST 7 — verify scheduler sleep time is computed properly
 # ---------------------------------------------------------
 @pytest.mark.asyncio
-@patch("core.scheduler.time.sleep")
+@patch("core.scheduler.asyncio.sleep")
 @patch("core.scheduler.Config")
 @patch("core.scheduler.write", new_callable=AsyncMock)
 @patch("core.scheduler.validate")
 @patch("core.scheduler.fetch_all")
+@patch("core.scheduler.close_pool", new_callable=AsyncMock)
+@patch("core.scheduler.init_pool", new_callable=AsyncMock)
 async def test_scheduler_sleep_timing(
-    mock_fetch, mock_validate, mock_write, mock_config, mock_sleep
+    mock_init, mock_close, mock_fetch, mock_validate, mock_write, mock_config, mock_sleep
 ):
     mock_fetch.side_effect = [
         [make_rec()],
